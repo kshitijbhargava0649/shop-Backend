@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: shop_postgres
+    environment:
+      POSTGRES_DB: shop_db
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - shop_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: shop_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: shop_user
+      MONGO_INITDB_ROOT_PASSWORD: shop_password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - shop_network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  shop_network:   
+    driver: bridge 
