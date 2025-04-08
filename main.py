@@ -9,6 +9,7 @@ app = create_app()
 from app.products.routes import api as products_apis
 
 
+
 api = Api(app,version='1.0',title='Dookan App',description='API for Shopify')
 # api.add_namespace(auth_apis)
 # api.add_namespace(events_apis)

@@ -11,9 +11,9 @@ class Product(Document):
     price = FloatField(required=True)
     sku = StringField()
     image_url = StringField()
-    variants = ListField(DictField())
-    created_at = DateTimeField(default=datetime.utcnow)
-    updated_at = DateTimeField(default=datetime.utcnow)
+    # variants = ListField(DictField())
+    # created_at = DateTimeField(default=datetime.utcnow)
+    # updated_at = DateTimeField(default=datetime.utcnow)
     
     meta = {
         'collection': 'identifier_products',

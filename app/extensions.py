@@ -4,4 +4,5 @@ from flask_sqlalchemy import SQLAlchemy
 
 # Initialize extensions
 jwt = JWTManager()
-db = SQLAlchemy()  # For PostgreSQL 
+postgres_db = SQLAlchemy()  # For PostgreSQL
+db = postgres_db  # Alias for backward compatibility 
