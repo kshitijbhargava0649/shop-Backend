@@ -7,11 +7,11 @@ from app.products.input_validation import ProductSchema, ProductUpdateSchema
 from app.utils.event_logger import log_event
 
 
-api = Namespace('/api/products', description='Product related endpoints')
+api = Namespace('products', description='Product related endpoints')
 
 @api.route('/')
 class ProductList(Resource):
-
+    # @jwt_required()
     def get(self):
         """Get all products with filtering and pagination"""
         try:
@@ -22,7 +22,7 @@ class ProductList(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
-
+    # @jwt_required()
     def post(self):
         """Create a new product"""
         try:
@@ -44,6 +44,7 @@ class ProductResource(Resource):
         """Get a specific product by ID"""
         try:
             product = get_product_by_id(product_id)
+            print(product_id)
             if not product:
                 return {'error': 'Product not found'}, 404
             schema = ProductSchema()
@@ -87,37 +88,7 @@ class ProductResource(Resource):
             if not result:
                 return {'error': 'Product not found'}, 404
                 
-            
             return '', 204
         except Exception as e:
             return {'error': str(e)}, 500
 
-# @api.route('/bulk')
-# class ProductBulkOperations(Resource):
-    # @jwt_required()
-    # def post(self):
-    #     """Bulk create products"""
-    #     try:
-    #         data = product_bulk_create_schema.load(request.json)
-    #         products = product_service.bulk_create_products(data['products'])
-    #         for product in products:
-    #             EventLogger.log_event('CREATE', 'product', product.id)
-    #         return products_schema.dump(products), 201
-    #     except ValidationError as e:
-    #         return {'error': e.messages}, 400
-    #     except Exception as e:
-    #         return {'error': str(e)}, 500
-
-    # @jwt_required()
-    # def put(self):
-    #     """Bulk update products"""
-    #     try:
-    #         data = product_bulk_update_schema.load(request.json)
-    #         products = product_service.bulk_update_products(data['products'])
-    #         for product in products:
-    #             EventLogger.log_event('UPDATE', 'product', product.id)
-    #         return products_schema.dump(products), 200
-    #     except ValidationError as e:
-    #         return {'error': e.messages}, 400
-    #     except Exception as e:
-    #         return {'error': str(e)}, 500 

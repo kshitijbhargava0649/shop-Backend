@@ -1,5 +1,5 @@
 from app.events.models import Event
-from app.extensions import postgres_db
+from app.extensions import db
 
 def log_event(event_type, user_id, product_id):
     """
@@ -22,11 +22,13 @@ def log_event(event_type, user_id, product_id):
         )
         
         # Save to database
-        postgres_db.session.add(event)
-        postgres_db.session.commit()
+        db.session.add(event)
+        db.session.commit()
         
         return event
     except Exception as e:
+        # Rollback the session in case of any error
+        db.session.rollback()
         # Log the error but don't raise it to avoid breaking the main flow
         print(f"Failed to log event: {str(e)}")
         return None 

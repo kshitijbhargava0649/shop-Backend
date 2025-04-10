@@ -4,7 +4,7 @@ import requests
 from flask import current_app
 from datetime import datetime
 from .models import Product
-from app import postgres_db
+from app import db
 from app.events.models import Event
 from flask import request
 from datetime import datetime
@@ -26,12 +26,12 @@ def log_product_event(event_type, product_id, user_id=None):
                 timestamp=datetime.utcnow()
             )
             # Add and commit to database
-            postgres_db.session.add(new_event)
-            postgres_db.session.commit()
+            db.session.add(new_event)
+            db.session.commit()
             
             return True
         except Exception as e:
             current_app.logger.error(f"Failed to log event: {str(e)}")
-            postgres_db.session.rollback()
+            db.session.rollback()
             return False
         

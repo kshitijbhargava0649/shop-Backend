@@ -11,9 +11,7 @@ class Product(Document):
     price = FloatField(required=True)
     sku = StringField()
     image_url = StringField()
-    # variants = ListField(DictField())
-    # created_at = DateTimeField(default=datetime.utcnow)
-    # updated_at = DateTimeField(default=datetime.utcnow)
+ 
     
     meta = {
         'collection': 'identifier_products',
@@ -29,7 +27,4 @@ class Product(Document):
             'price': self.price,
             'sku': self.sku,
             'image_url': self.image_url,
-            'variants': self.variants,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
         } 
