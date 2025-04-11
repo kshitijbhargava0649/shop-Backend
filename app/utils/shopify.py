@@ -11,7 +11,7 @@ class ShopifyAPI:
     def __init__(self):
         self.shop_name = os.getenv('SHOPIFY_SHOP_NAME')
         self.access_token = os.getenv('SHOPIFY_ACCESS_TOKEN')
-        self.api_version = os.getenv('SHOPIFY_API_VERSION', '2024-01')
+        self.api_version = os.getenv('SHOPIFY_API_VERSION', '2023-10')
         
         if not self.shop_name:
             raise ValueError("SHOPIFY_SHOP_NAME environment variable is not set")
@@ -72,9 +72,7 @@ class ShopifyAPI:
                             edges {
                                 node {
                                     price
-                                    inventoryItem {
-                                        sku
-                                    }
+                                    sku
                                 }
                             }
                         }
@@ -108,7 +106,7 @@ class ShopifyAPI:
             variant = product['variants']['edges'][0]['node'] if product['variants']['edges'] else None
             print("Variant:", variant)  # Debug print
             price = float(variant['price']) if variant else 0.0
-            sku = variant['inventoryItem']['sku'] if variant and variant.get('inventoryItem') else ''
+            sku = variant['sku'] if variant else ''
             
             # Get image URL
             image = product['images']['edges'][0]['node']['url'] if product['images']['edges'] else ''
@@ -165,9 +163,7 @@ class ShopifyAPI:
                 productVariant {
                     id
                     price
-                    inventoryItem {
-                        sku
-                    }
+                    sku
                 }
                 userErrors {
                     field
@@ -205,9 +201,7 @@ class ShopifyAPI:
             "input": {
                 "id": variant_id,
                 "price": str(product_data["price"]),
-                "inventoryItem": {
-                    "sku": product_data.get("sku", "")
-                }
+                "sku": product_data.get("sku", "")
             }
         }
         
@@ -258,7 +252,7 @@ class ShopifyAPI:
         return self.get_product(product_id)
 
     def update_product(self, product_id: str, product_data: Dict) -> Dict:
-        """Update a product in Shopify"""
+        """Update an existing product in Shopify"""
         # Step 1: Update the base product
         update_product_mutation = """
         mutation productUpdate($input: ProductInput!) {
@@ -267,23 +261,6 @@ class ShopifyAPI:
                     id
                     title
                     descriptionHtml
-                    variants(first: 1) {
-                        edges {
-                            node {
-                                price
-                                inventoryItem {
-                                    sku
-                                }
-                            }
-                        }
-                    }
-                    images(first: 1) {
-                        edges {
-                            node {
-                                url
-                            }
-                        }
-                    }
                 }
                 userErrors {
                     field
@@ -293,13 +270,9 @@ class ShopifyAPI:
         }
         """
         
-        # Convert numeric ID to full GID format if needed
-        if not product_id.startswith("gid://"):
-            product_id = f"gid://shopify/Product/{product_id}"
-        
         product_variables = {
             "input": {
-                "id": product_id,
+                "id": f"gid://shopify/Product/{product_id}",
                 "title": product_data["title"],
                 "descriptionHtml": product_data.get("description", "")
             }
@@ -310,16 +283,14 @@ class ShopifyAPI:
         if product_result.get("errors"):
             raise Exception(f"Shopify API Error: {product_result['errors'][0]['message']}")
         
-        # Step 2: Update variant
+        # Step 2: Update the variant
         update_variant_mutation = """
         mutation productVariantUpdate($input: ProductVariantInput!) {
             productVariantUpdate(input: $input) {
                 productVariant {
                     id
                     price
-                    inventoryItem {
-                        sku
-                    }
+                    sku
                 }
                 userErrors {
                     field
@@ -329,7 +300,7 @@ class ShopifyAPI:
         }
         """
         
-        # Get the existing variant ID
+        # Get the variant ID
         get_variant_query = """
         query getProductVariants($productId: ID!) {
             product(id: $productId) {
@@ -345,7 +316,7 @@ class ShopifyAPI:
         """
         
         variant_query_variables = {
-            "productId": product_id
+            "productId": f"gid://shopify/Product/{product_id}"
         }
         
         variant_query_result = self._make_request(get_variant_query, variant_query_variables)
@@ -355,9 +326,7 @@ class ShopifyAPI:
             "input": {
                 "id": variant_id,
                 "price": str(product_data["price"]),
-                "inventoryItem": {
-                    "sku": product_data.get("sku", "")
-                }
+                "sku": product_data.get("sku", "")
             }
         }
         
@@ -368,7 +337,8 @@ class ShopifyAPI:
         
         # Step 3: Update image if provided
         if product_data.get("image_url"):
-            update_media_mutation = """
+            # Create new image
+            create_media_mutation = """
             mutation productCreateMedia($productId: ID!, $media: [CreateMediaInput!]!) {
                 productCreateMedia(productId: $productId, media: $media) {
                     media {
@@ -388,19 +358,19 @@ class ShopifyAPI:
             """
             
             media_variables = {
-                "productId": product_id,
+                "productId": f"gid://shopify/Product/{product_id}",
                 "media": [{
                     "mediaContentType": "IMAGE",
                     "originalSource": product_data["image_url"]
                 }]
             }
             
-            media_result = self._make_request(update_media_mutation, media_variables)
+            media_result = self._make_request(create_media_mutation, media_variables)
             
             if media_result.get("errors"):
                 raise Exception(f"Shopify API Error: {media_result['errors'][0]['message']}")
         
-        # Return the complete updated product data
+        # Return the updated product
         return self.get_product(product_id)
 
     def delete_product(self, product_id: str) -> Dict:
@@ -445,9 +415,7 @@ class ShopifyAPI:
                     edges {
                         node {
                             price
-                            inventoryItem {
-                                sku
-                            }
+                            sku
                         }
                     }
                 }
@@ -480,7 +448,7 @@ class ShopifyAPI:
         # Get variant data
         variant = product['variants']['edges'][0]['node'] if product['variants']['edges'] else None
         price = float(variant['price']) if variant else 0.0
-        sku = variant['inventoryItem']['sku'] if variant and variant.get('inventoryItem') else ''
+        sku = variant['sku'] if variant else ''
         
         # Get image URL
         image = product['images']['edges'][0]['node']['url'] if product['images']['edges'] else ''

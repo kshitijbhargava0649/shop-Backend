@@ -6,8 +6,8 @@ services:
     container_name: shop_postgres
     environment:
       POSTGRES_DB: shop_db
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: shop_user
+      POSTGRES_PASSWORD: shop_password
     ports:
       - "5432:5432"
     volumes:

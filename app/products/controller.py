@@ -8,6 +8,7 @@ from app.extensions import db
 from app.events.models import Event
 from .services import log_product_event
 from app.utils.shopify import ShopifyAPI
+from flask_jwt_extended import get_jwt_identity
 
 # Initialize Shopify API
 shopify_api = ShopifyAPI()
@@ -15,13 +16,15 @@ shopify_api = ShopifyAPI()
 def get_all_products():
     """Get all products directly from Shopify"""
     try:
-        user_id = request.headers.get('User-ID', 'System')
+        user_id = get_jwt_identity()
+        if not user_id:
+            user_id = 'System'
         
         # Get products directly from Shopify
         products = shopify_api.get_products()
         
         # Log read event in PostgreSQL
-        log_product_event('READ', 'ALL_PRODUCTS', user_id)
+        log_product_event('READ', 'ALL_PRODUCTS', str(user_id))
         
         return products
     
@@ -32,29 +35,32 @@ def get_all_products():
 def create_product(product_data):
     """Create a product in Shopify and sync to local DB only if successful"""
     try:
-        user_id = request.headers.get('User-ID', 'System')
+        user_id = get_jwt_identity()
+        if not user_id:
+            user_id = 'System'
 
         # First create in Shopify
         shopify_product = shopify_api.create_product(product_data)
-        print(shopify_product)
         if not shopify_product:
             raise Exception("Failed to create product in Shopify")
         
         # If Shopify creation successful, create in local DBs
         try:
             # Create product in our database
+            print("hi there ther eht herfnefwefewf")
+            print(shopify_product)
             product = Product(
                 shopify_id=str(shopify_product['shopify_id']),
                 title=shopify_product['title'],
                 description=shopify_product['description'],
                 price=shopify_product['price'],
                 sku=shopify_product['sku'],
-                image_url=shopify_product['image_url']
+                image_url=product_data['image_url']
             )
             product.save()
             
             # Log event in PostgreSQL
-            log_product_event('CREATE', shopify_product['shopify_id'], user_id)
+            log_product_event('CREATE', shopify_product['shopify_id'], str(user_id))
             
             return product
             
@@ -70,7 +76,9 @@ def create_product(product_data):
 def get_product_by_id(product_id):
     """Get a product directly from Shopify"""
     try:
-        user_id = request.headers.get('User-ID', 'System')
+        user_id = get_jwt_identity()
+        if not user_id:
+            user_id = 'System'
         
         # Get product directly from Shopify
         product = shopify_api.get_product(product_id)
@@ -79,7 +87,7 @@ def get_product_by_id(product_id):
             raise Exception("Product not found in Shopify")
         
         # Log read event in PostgreSQL
-        log_product_event('READ', product_id, user_id)
+        log_product_event('READ', product_id, str(user_id))
         
         return product
         
@@ -90,6 +98,10 @@ def get_product_by_id(product_id):
 def update_product(product_id, product_data):
     """Update a product in Shopify and sync to local DB only if successful"""
     try:
+        user_id = get_jwt_identity()
+        if not user_id:
+            user_id = 'System'
+
         # First update in Shopify
         shopify_product = shopify_api.update_product(product_id, product_data)
         
@@ -107,21 +119,20 @@ def update_product(product_id, product_data):
                     description=shopify_product['description'],
                     price=shopify_product['price'],
                     sku=shopify_product['sku'],
-                    image_url=shopify_product['image_url']
+                    image_url=product_data['image_url']
                 )
             else:
                 product.title = shopify_product['title']
                 product.description = shopify_product['description']
                 product.price =shopify_product['price']
                 product.sku = shopify_product['sku']
-                product.image_url = shopify_product['image_url']
+                product.image_url = product_data['image_url']
             
             product.updated_at = datetime.utcnow()
             product.save()
             
             # Log event in PostgreSQL
-            user_id = request.headers.get('User-ID', 'System')
-            log_product_event('UPDATE', product_id, user_id)
+            log_product_event('UPDATE', product_id, str(user_id))
             
             return product
             
@@ -137,6 +148,10 @@ def update_product(product_id, product_data):
 def delete_product(product_id):
     """Delete a product from Shopify and local DB only if successful"""
     try:
+        user_id = get_jwt_identity()
+        if not user_id:
+            user_id = 'System'
+
         # First delete from Shopify
         result = shopify_api.delete_product(product_id)
         
@@ -151,8 +166,7 @@ def delete_product(product_id):
                 product.delete()
             
             # Log event in PostgreSQL
-            user_id = request.headers.get('User-ID', 'System')
-            log_product_event('DELETE', product_id, user_id)
+            log_product_event('DELETE', product_id, str(user_id))
             
             return True
             

@@ -18,7 +18,7 @@ class Signup(Resource):
         try:
             data = request.json
             user = create_user(data)
-            token = create_access_token(identity=str(user.id))
+            token = create_access_token(identity=str(user.id))  # timeout?
             return {
                 'token': token,
                 'user': user.to_dict()
@@ -52,7 +52,7 @@ class Login(Resource):
             return {
                 'token': token,
                 'user': user.to_dict()
-            }
+            }, 200
             
         except Exception as e:
             # Log the actual error for debugging

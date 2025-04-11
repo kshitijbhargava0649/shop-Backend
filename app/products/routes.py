@@ -2,6 +2,7 @@ import traceback
 from flask import request, jsonify
 from marshmallow import ValidationError
 from flask_restx import Namespace, Resource
+from flask_jwt_extended import jwt_required
 from app.products.controller import create_product, get_all_products, get_product_by_id, update_product, delete_product
 from app.products.input_validation import ProductSchema, ProductUpdateSchema
 from app.utils.event_logger import log_event
@@ -11,7 +12,8 @@ api = Namespace('products', description='Product related endpoints')
 
 @api.route('/')
 class ProductList(Resource):
-    # @jwt_required()
+    # @jwt_required()   
+    @jwt_required()
     def get(self):
         """Get all products with filtering and pagination"""
         try:
@@ -23,6 +25,7 @@ class ProductList(Resource):
             return {'error': str(e)}, 500
 
     # @jwt_required()
+    @jwt_required()
     def post(self):
         """Create a new product"""
         try:
@@ -40,6 +43,7 @@ class ProductList(Resource):
 
 @api.route('/<string:product_id>')
 class ProductResource(Resource):
+    @jwt_required()
     def get(self, product_id):
         """Get a specific product by ID"""
         try:
@@ -52,6 +56,7 @@ class ProductResource(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
+    @jwt_required()
     def put(self, product_id):
         """Update a product"""
         try:
@@ -76,6 +81,7 @@ class ProductResource(Resource):
             print(traceback.format_exc())
             return {'error': str(e)}, 500
 
+    @jwt_required()
     def delete(self, product_id):
         """Delete a product"""
         try:
