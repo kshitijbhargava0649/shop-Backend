@@ -15,10 +15,12 @@ pymongo==4.6.2
 marshmallow==3.21.1
 requests==2.31.0
 gql==3.5.0
+requests-toolbelt==1.0.0
 
 # Security
 bcrypt==4.1.2
 python-jose==3.3.0
+passlib[bcrypt]==1.7.4
 
 # Development
 python-dotenv==1.0.1 

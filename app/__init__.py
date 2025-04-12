@@ -1,12 +1,10 @@
 import logging
-from flask import Flask
+from flask import Flask, request, make_response
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from mongoengine import connect, disconnect
 from app.config import Config
-
-# Initialize database objects
-postgres_db = SQLAlchemy()
+from app.extensions import db
+from flask_jwt_extended import JWTManager
 
 def configure_logging():
     """Configure logging for the application."""
@@ -22,9 +20,9 @@ def configure_logging():
 def init_postgres(app):
     """Initialize PostgreSQL connection."""
     try:
-        postgres_db.init_app(app)
+        db.init_app(app)
         with app.app_context():
-            postgres_db.engine.connect()
+            db.engine.connect()
         logging.info("Successfully connected to PostgreSQL")
     except Exception as e:
         logging.error(f"Failed to connect to PostgreSQL: {e}")
@@ -59,13 +57,42 @@ def create_app():
     # Apply configurations from Config class
     app.config.from_object(Config)
     
+    # Configure CORS globally
+    CORS(app, 
+         resources={r"/*": {"origins": "*"}},  # Allow all origins
+         supports_credentials=True,
+         allow_headers="*",  # Allow all headers
+         methods="*"  # Allow all methods
+    )
+    
+    @app.before_request
+    def handle_options_request():
+        """Handle preflight OPTIONS requests."""
+        if request.method == 'OPTIONS':
+            response = make_response()
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+    
     # Initialize extensions and databases
-    CORS(app)
-    init_postgres(app)
-    init_mongo(app)
+    try:
+        init_postgres(app)
+    except Exception as e:
+        logging.error("PostgreSQL initialization failed.")
+    
+    try:
+        init_mongo(app)
+    except Exception as e:
+        logging.error("MongoDB initialization failed.")
+    
+    # Initialize JWTManager
+    jwt = JWTManager()
+    jwt.init_app(app)
 
-    # Register routes dynamically (example placeholder)
-    # from .routes import register_routes
-    # register_routes(app)
+    # Register blueprints
+    # from app.auth.routes import api as auth_api
+    # app.register_blueprint(auth_api, url_prefix='/api')
 
     return app

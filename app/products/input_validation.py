@@ -7,8 +7,6 @@ class ProductSchema(Schema):
     price = fields.Float(required=True, validate=validate.Range(min=0))
     sku = fields.Str()
     image_url = fields.Str()
-    created_at = fields.DateTime(dump_only=True)
-    updated_at = fields.DateTime(dump_only=True)
 
 class ProductUpdateSchema(ProductSchema):
     title = fields.Str(validate=validate.Length(min=1))

@@ -2,16 +2,6 @@ from datetime import datetime
 from sqlalchemy import Enum, Index
 from app.extensions import db
 
-# class EventType(Enum):
-#     CREATE = 'CREATE'
-#     READ = 'READ'
-#     UPDATE = 'UPDATE'
-#     DELETE = 'DELETE'
-#     LOGIN = 'LOGIN'
-#     LOGOUT = 'LOGOUT'
-#     EXPORT = 'EXPORT'
-#     IMPORT = 'IMPORT'
-#     ERROR = 'ERROR'
 
 class Event(db.Model):
     __tablename__ = 'identifier_events'
@@ -30,7 +20,7 @@ class Event(db.Model):
 
     def to_dict(self):
         return {
-            'event_id': self.id,
+            'event_id': self.event_id,
             'event_type': self.event_type,
             'user_id': self.user_id,    
             'product_id': self.product_id,
