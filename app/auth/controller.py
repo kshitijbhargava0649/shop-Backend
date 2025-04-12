@@ -6,7 +6,6 @@ from flask_jwt_extended import create_access_token, get_jwt_identity
 from .models import User
 from app.extensions import db
 from app.events.models import Event
-from app.events.services import log_event 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
