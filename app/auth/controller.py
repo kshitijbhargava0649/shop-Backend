@@ -2,7 +2,7 @@ import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from flask import current_app
-from flask_jwt_extended import create_access_token, get_jwt_identity
+from flask_jwt_extended import create_access_token
 from .models import User
 from app.extensions import db
 from app.events.models import Event
@@ -60,23 +60,4 @@ def create_user(user_data: Dict) -> User:
         return user
     except Exception as e:
         current_app.logger.error(f"User creation error: {str(e)}")
-        raise
-
-def get_current_user() -> User:
-    """Get current user from token"""
-    try:
-        user_id = get_jwt_identity()
-        if not user_id:
-            return None
-        
-        user = User.objects(id=user_id).first()
-        if not user:
-            return None
-            
-        # Log token validation event
-        # log_event('VALIDATE', 'TOKEN', str(user.id))
-        
-        return user
-    except Exception as e:
-        current_app.logger.error(f"Token validation error: {str(e)}")
-        return None 
+        raise 
