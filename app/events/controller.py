@@ -31,12 +31,6 @@ def get_all_events(filters=None):
         if filters.get('user_id'):
             query = query.filter(Event.user_id == filters['user_id'])
 
-        # Handle custom date range if provided
-        if filters.get('start_date'):
-            query = query.filter(Event.timestamp >= filters['start_date'])
-        if filters.get('end_date'):
-            query = query.filter(Event.timestamp <= filters['end_date'])
-
     # Order by timestamp descending (newest first)
     query = query.order_by(desc(Event.timestamp))
 
@@ -44,54 +38,17 @@ def get_all_events(filters=None):
     events = query.all()
     return [event.to_dict() for event in events]
 
-def get_event_by_id(event_id):
-    """
-    Get a specific event by ID
-    """
-    event = Event.query.get(event_id)
-    if event:
-        return event.to_dict()
-    return None
 
 def get_event_stats(filters=None):
     """
     Get event statistics for visualization
     """
-    query = Event.query
+    # query = Event.query
 
-    # Apply filters
-    if filters:
-        # Handle time range filter
-        if filters.get('time_range'):
-            now = datetime.utcnow()
-            if filters['time_range'] == 'day':
-                start_date = now - timedelta(days=1)
-                query = query.filter(Event.timestamp >= start_date)
-            elif filters['time_range'] == 'week':
-                start_date = now - timedelta(weeks=1)
-                query = query.filter(Event.timestamp >= start_date)
-            elif filters['time_range'] == 'month':
-                start_date = now - timedelta(days=30)
-                query = query.filter(Event.timestamp >= start_date)
+  
 
-        # Handle event type filter - skip if 'all' is selected
-        if filters.get('event_type') and filters['event_type'].lower() != 'all':
-            query = query.filter(Event.event_type == filters['event_type'])
-
-        # Handle user ID filter
-        if filters.get('user_id'):
-            query = query.filter(Event.user_id == filters['user_id'])
-
-        # Handle custom date range if provided
-        if filters.get('start_date'):
-            query = query.filter(Event.timestamp >= filters['start_date'])
-        if filters.get('end_date'):
-            query = query.filter(Event.timestamp <= filters['end_date'])
-
-    # Get group by parameter (default to day if time_range is not specified)
-    group_by = 'day'
-    if filters and filters.get('time_range'):
-        group_by = filters['time_range']
+    # Get group by parameter (default to day if not specified)
+    group_by = filters.get('group_by', 'day') if filters else 'day'
 
     # Create the grouping expression based on the group_by parameter
     if group_by == 'day':

@@ -38,21 +38,7 @@ def init_models(api):
         'password': fields.String(required=True)
     })
 
-    # Response models
-    user_model = api.model('User', {
-        'id': fields.String,
-        'name': fields.String,
-        'email': fields.String
-    })
-
-    token_response = api.model('TokenResponse', {
-        'token': fields.String,
-        'user': fields.Nested(user_model)
-    })
-
     return {
         'signup_model': signup_model,
-        'login_model': login_model,
-        'user_model': user_model,
-        'token_response': token_response
+        'login_model': login_model
     } 
